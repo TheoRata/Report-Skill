@@ -25,8 +25,8 @@ The point isn't fancier output. The point is making the **artifact good enough t
 - **Hover-preview footnotes** — references show the footnote text in a side popover without losing your place.
 - **Syntax-highlighted code blocks** for the languages you actually use.
 - **Save as Markdown** — the source `.md` is embedded in the HTML; one button extracts it back out. The HTML is the canonical artifact; the source survives inside it.
-- **Inline edit mode** — toggle to fix typos directly in the browser, then re-save as Markdown.
-- **Comments & review** — drop margin notes on any block, persisted to localStorage, with a review rail and a Cmd-O switcher to jump between threads.
+- **Inline edit mode** — toggle to fix typos directly in the browser, then save the corrected source back to disk.
+- **Comments & review** — drop margin notes on any block during a local review session; comments are persisted as `@report-comment` markers inside the embedded Markdown and survive re-renders.
 - **Sortable, filterable report index** — `build-index.mjs` scans `reports/` and renders a real index page with status pills, tags, and reading time.
 
 ### Hero — light & dark
@@ -60,6 +60,95 @@ Standard Markdown footnote syntax (`[^1]`). On hover, the footnote pops out in t
 ![Reports index page with sortable columns and filter](docs/screenshots/05-index.png)
 
 `build-index.mjs` walks `reports/`, reads each report's frontmatter, and produces a real index page. Click a column header to sort. Type in the filter to narrow by title, tag, or summary. Status pills (`draft` / `final`) come from frontmatter.
+
+### Inline edit mode
+
+![Edit mode with hover highlight and status pill](docs/screenshots/07-edit-mode.png)
+
+Click **Edit** in the top-right (or press `Option+E`) and the body of the report becomes `contenteditable`. Hovering a block lightly tints it; clicking it puts the caret inside. A status pill anchors at the bottom-left while edit mode is on (*"Editing — Option+E to exit, Option+S to save"*).
+
+**How it works:**
+
+1. The toggle flips `data-edit-mode="true"` on `<body>`. CSS turns headings, paragraphs, list items, table cells, blockquotes, and code blocks into edit targets and hides chrome that shouldn't be touched (heading anchors, copy-code buttons, footnote back-links).
+2. You type your fix straight into the page.
+3. Press `Option+S` (or click **Save as MD**) and the page rebuilds the source Markdown from the DOM and pushes it back to disk. The original `.md` file next to the HTML is updated, and `render.mjs` is re-run automatically so the visible HTML and embedded `source-md` stay in sync.
+
+This is the path for typo-level fixes and small wording changes — anywhere you'd otherwise stop, open the source `.md`, edit, and re-render. For larger structural changes, edit the `.md` directly and re-render with `node render.mjs`; the workflows compose.
+
+Markdown is still the source of truth. Edit-mode only round-trips through it — there's no separate "edited HTML" artifact to keep track of.
+
+### Comments & review
+
+![Report with right-side comments rail showing open threads](docs/screenshots/08-comments-report.png)
+
+Long-form reports need review just like code does. The skill ships a local review server that turns any rendered HTML into a commentable surface — without a separate database, account system, or hosted service.
+
+**Start a review session** against any rendered report:
+
+```bash
+node ~/.claude/skills/report/review.mjs reports/the-report.html
+```
+
+The server prints a `localhost` URL. Open it; the report now has comment chrome on top of the regular reading view.
+
+**Add a comment:** press `C` (or click **Comment**) to enter comment mode, then click any block — paragraph, heading, list item, code block, figure caption. A composer opens, you type, `Cmd+Enter` to save. The comment appears in the right-side rail with a status (`open` / `resolved`), an ID (`c8`, `c15`, …), and a backlink to its target block.
+
+![Focused comment card with edit / resolve / delete actions](docs/screenshots/09-comment-popup.png)
+
+**Manage threads from the rail.** Click a comment to focus it — the card expands with **edit**, **resolve**, **reopen**, and **delete** actions. The rail shows open / resolved / total counts and a status filter. Press `N` to jump to the next open comment.
+
+**Deep-link anywhere.** Every comment and every block has a stable ID (`#comment-cN`, `#block-bN`) so you can paste a link to a specific thread or paragraph into a chat, ticket, or another report.
+
+**How comments survive re-renders.** This is the part that makes the system durable:
+
+- The review server stores comments as HTML markers inside the embedded `<script id="source-md" type="text/markdown">` block:
+  ```html
+  <!-- @report-comment id="c8" status="open" target="block:b14"
+  THIS IS A TEST
+  -->
+  ```
+- Every comment write updates **both** the HTML's embedded `source-md` **and** the sibling `.md` file next to it. The source `.md` is the canonical artifact; the HTML embed is a mirror.
+- When the agent (or you) re-renders with `node render.mjs the-report.md`, comments come back along with the prose. They are part of the document.
+- An agent rerunning a revision pass reads the `.md`, sees every `@report-comment` marker with its target block, edits the affected text, and changes each handled marker from `status="open"` to `status="resolved"` with a `Resolved: …` paragraph appended.
+
+**Export a Markdown review summary** when you want a quick-scan list of all threads:
+
+```bash
+node ~/.claude/skills/report/review-summary.mjs reports/the-report.html
+```
+
+**Strip comments when the report is final:**
+
+```bash
+node ~/.claude/skills/report/clean-comments.mjs reports/the-report.html
+```
+
+The point of the design: review is part of the artifact, not an external system. Send the HTML to someone, they comment, send it back — the comments come along inside the same file.
+
+---
+
+## Cost — vs. writing plain Markdown
+
+The honest comparison, since the skill replaces a `.md` file with an HTML one.
+
+| | Plain `.md` | Rendered report |
+|---|---|---|
+| **Tokens the agent writes** | Markdown | Markdown — *identical* |
+| **Disk size** | ~5–15 KB | ~100–150 KB (template + content) |
+| **Render time** | none | ~200–400 ms per report |
+| **Dependencies** | none | Node.js 20+ |
+| **What you open** | a text file | a designed document |
+| **Editable later** | yes — re-open the `.md` | yes — `.md` is preserved next to the HTML, *and* embedded inside it |
+| **Round-trippable** | trivially | yes — `extract.mjs` recovers source from any HTML |
+| **Review workflow** | comments-in-a-separate-file or PR review | first-class, in-document, persisted into the source |
+
+**The token cost is zero.** The agent writes the same Markdown it would have written for a `.md` file — there is no "render this richer" prompt that costs more output tokens. The HTML is built mechanically from the Markdown by `render.mjs`, which doesn't talk to a model.
+
+**The disk cost is real but bounded.** A rendered report is ~10× larger than its source Markdown because the entire template — CSS, fonts as CSS variables, theme switcher, TOC builder, lightbox, edit mode, comment rail, syntax highlighting — is inlined into every file. That's a deliberate trade: each HTML is a self-contained artifact you can email, drop into a Slack channel, or open offline ten years from now without a build step. No `node_modules`, no CDN, no broken links.
+
+**The dependency cost is one binary.** Node 20+ for `render.mjs`. No npm install, no bundler, no framework. The renderer is plain `.mjs`.
+
+**When to skip this skill and just write Markdown:** quick conversational answers, single-file code edits, status updates, one-line confirmations, anything under ~300 words. The skill is for *real* reports — write-ups you'd want to come back to, not every paragraph an agent emits.
 
 ---
 
