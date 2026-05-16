@@ -8,8 +8,6 @@ Token spend is identical to writing a plain `.md`. The HTML is generated mechani
 
 ![Designed reports, in-document review, light & dark themes](docs/screenshots/00-demo-strip.png)
 
-> **Want to see it in motion?** A recording script for a 30-second screencast lives in [`docs/RECORDING.md`](docs/RECORDING.md). One take with QuickTime gets you the asset for every channel you'll share this on.
-
 ---
 
 ## The moment this matters
