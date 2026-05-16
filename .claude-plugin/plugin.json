@@ -1,0 +1,11 @@
+{
+  "name": "report",
+  "description": "Render long-form agent output as a designed HTML report — TOC, callouts, framed figures, footnotes, light/dark themes, in-document review comments, and lossless round-trip back to Markdown.",
+  "version": "1.0.0",
+  "author": {
+    "name": "TheoRata",
+    "url": "https://github.com/TheoRata"
+  },
+  "homepage": "https://github.com/TheoRata/Report-Skill",
+  "license": "MIT"
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "report-skill",
+  "description": "A Claude Code skill that turns long-form agent output into a designed HTML report instead of a flat Markdown file.",
+  "owner": {
+    "name": "TheoRata",
+    "url": "https://github.com/TheoRata"
+  },
+  "plugins": [
+    {
+      "name": "report",
+      "description": "Render research, deep-dives, postmortems, and analyses as designed HTML with TOC, callouts, footnotes, light/dark themes, and in-document review comments.",
+      "source": "./",
+      "category": "documentation",
+      "tags": ["report", "html", "markdown", "research", "writing", "documentation", "review"]
+    }
+  ]
+}

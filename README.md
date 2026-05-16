@@ -6,15 +6,21 @@ The agent writes plain Markdown. `render.mjs` does everything else: serif typogr
 
 Token spend is identical to writing a plain `.md`. The HTML is generated mechanically.
 
-![Light-mode hero with sticky TOC and metadata table](docs/screenshots/01-light-hero.png)
+![Designed reports, in-document review, light & dark themes](docs/screenshots/00-demo-strip.png)
+
+> **Want to see it in motion?** A recording script for a 30-second screencast lives in [`docs/RECORDING.md`](docs/RECORDING.md). One take with QuickTime gets you the asset for every channel you'll share this on.
 
 ---
 
-## Why this exists
+## The moment this matters
 
-LLM agents produce a lot of long-form text — research, postmortems, architecture notes, audits. The default dumping ground is a Markdown file in `reports/` that nobody opens. This skill flips the default: the same Markdown becomes a real document you actually want to read, with a TOC, callouts, a theme, and citations that feel like citations.
+You asked Claude to *"research the failure modes of LLM-generated frontend code"*, or *"postmortem the outage from last Thursday"*, or *"document our auth migration so the team can review it"*. Three minutes later you have **3,000 words of genuinely good output** sitting in a `.md` file. And then what?
 
-The point isn't fancier output. The point is making the **artifact good enough to share** — with a teammate, a client, or future-you — without a separate publishing step.
+You open it in your editor. The wall of plain text doesn't feel like the work it is. You can't send it to a colleague without context. You can't comment on it block-by-block. You can't even tell at a glance which sections are long. The artifact undersells the work.
+
+This skill is for that moment. The agent writes the same Markdown it would have anyway. The renderer turns it into a document — TOC on the side, theme that respects the time of day, footnotes that pop out on hover, tables that look like tables, comments you can leave on any paragraph. The same words; a wholly different artifact.
+
+The point isn't fancier output. It's making the artifact **good enough to share** — with a teammate, a client, or future-you — without a separate publishing step.
 
 ## Features
 
@@ -154,13 +160,30 @@ The honest comparison, since the skill replaces a `.md` file with an HTML one.
 
 ## Install
 
-Clone into your Claude Code skills directory:
+### Option 1 — Claude Code plugin (recommended)
 
-```bash
-git clone https://github.com/TheoRata/Report-Skill.git ~/.claude/skills/report
+From inside Claude Code:
+
+```
+/plugin marketplace add TheoRata/Report-Skill
+/plugin install report@report-skill
 ```
 
-That makes `/report` available globally across all your Claude Code projects. To install per-project instead, clone into `<project>/.claude/skills/report/`.
+That's it. Restart the session and the skill is live globally.
+
+To update later: `/plugin marketplace update report-skill`. To uninstall: `/plugin uninstall report@report-skill`.
+
+### Option 2 — Direct clone
+
+If you'd rather skip the plugin manager, clone the `skills/report/` subdirectory into Claude Code's skills directory:
+
+```bash
+git clone --depth 1 https://github.com/TheoRata/Report-Skill.git /tmp/report-skill && \
+  cp -R /tmp/report-skill/skills/report ~/.claude/skills/report && \
+  rm -rf /tmp/report-skill
+```
+
+That makes `/report` available globally across all your Claude Code projects. To install per-project instead, copy into `<project>/.claude/skills/report/`.
 
 ## Use
 
@@ -254,13 +277,15 @@ Source citations:
 :::
 ```
 
-See [SKILL.md](SKILL.md) for the complete list — bento metadata blocks, key-value definition lists, glossary sections, and more.
+See [SKILL.md](skills/report/SKILL.md) for the complete list — bento metadata blocks, key-value definition lists, glossary sections, and more.
 
 ## What's in here
 
-| File | Purpose |
+The skill itself lives under [`skills/report/`](skills/report/). The repo root holds the plugin manifests, this README, the screenshots, and the recording script.
+
+| File (in `skills/report/`) | Purpose |
 |---|---|
-| [`SKILL.md`](SKILL.md) | Skill entry point — read by Claude Code when `/report` is invoked |
+| [`SKILL.md`](skills/report/SKILL.md) | Skill entry point — read by Claude Code when `/report` is invoked |
 | `render.mjs` | Markdown → HTML renderer (the workhorse) |
 | `template.html` | The HTML shell the renderer fills in |
 | `index-template.html` | Template for the `reports/` index page |
