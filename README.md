@@ -8,6 +8,10 @@ Token spend is identical to writing a plain `.md`. The HTML is generated mechani
 
 ![Designed reports, in-document review, light & dark themes](docs/screenshots/00-demo-strip.png)
 
+**See an example:** **[report-skill.vercel.app](https://report-skill.vercel.app/)** — a fully rendered report, theme-switchable, openable right now.
+
+The renderer is plain Node and runs against any Markdown — whatever agent (or human) wrote it. The Claude Code plugin is the optional auto-trigger surface; rendering itself is editor- and agent-agnostic. And because review threads are persisted inside the embedded source, an agent can read its own comment feedback and revise the report against it.
+
 ---
 
 ## The moment this matters
@@ -155,6 +159,19 @@ The honest comparison, since the skill replaces a `.md` file with an HTML one.
 **When to skip this skill and just write Markdown:** quick conversational answers, single-file code edits, status updates, one-line confirmations, anything under ~300 words. The skill is for *real* reports — write-ups you'd want to come back to, not every paragraph an agent emits.
 
 ---
+
+## Quick start (no Claude Code required)
+
+The renderer is plain Node 20+, zero npm dependencies. It works against any Markdown:
+
+```bash
+git clone --depth 1 https://github.com/TheoRata/Report-Skill.git
+node Report-Skill/skills/report/render.mjs your-doc.md
+```
+
+Open the resulting `your-doc-YYYY-MM-DD.html` in any browser. That's the entire standalone install path — drop the command into a Cursor / Aider / Codex / raw-API workflow and the renderer doesn't care which agent (or human) produced the input.
+
+If you use Claude Code, you can also install the skill as a plugin so it triggers automatically from prompts like "deep-dive on X" or "postmortem Y" — see below.
 
 ## Install
 
