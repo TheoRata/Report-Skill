@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/", "destination": "/skills/report/example.html" }
+    { "source": "/", "destination": "/skills/report/example" }
   ]
 }
